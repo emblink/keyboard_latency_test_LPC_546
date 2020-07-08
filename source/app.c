@@ -215,6 +215,7 @@ static void USB_HostApplicationInit(void) {
 
 #define TIMER CTIMER1
 #define MEASURMENTS_COUNT 10000
+#define MEASURMENTS_PERIOD_MS 65
 #define DELAY_BEFORE_START_MS 1000
 #define GPIO_PORT 0
 #define GPIO_PIN 16
@@ -223,10 +224,11 @@ volatile uint32_t latency[MEASURMENTS_COUNT] = { 0 };
 volatile uint32_t idx = 0;
 volatile bool pressed = false;
 
-//void buttonPressEmulationCb(uint32_t foo) {
-//	(void) foo;
-//	GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, 0);
-//}
+void buttonPressEmulationCb(uint32_t foo) {
+	(void) foo;
+	pressed = true;
+	GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, 0);
+}
 
 void startMeasurements(uint32_t foo)
 {
@@ -234,16 +236,15 @@ void startMeasurements(uint32_t foo)
 	CTIMER_StopTimer(TIMER);
 	CTIMER_Reset(TIMER);
 	const ctimer_match_config_t matchcofig = {
-		.matchValue = 0xFFFFFFFF,
+		.matchValue = MEASURMENTS_PERIOD_MS * 1000,
 		.enableCounterReset = true,
-		.enableInterrupt = false
+		.enableInterrupt = true
 	};
 	CTIMER_SetupMatch(TIMER, kCTIMER_Match_0, &matchcofig);
-//	static ctimer_callback_t cb_func = buttonPressEmulationCb;
-//	CTIMER_RegisterCallBack(TIMER, &cb_func, kCTIMER_SingleCallback);
+	static ctimer_callback_t cb_func = buttonPressEmulationCb;
+	CTIMER_RegisterCallBack(TIMER, &cb_func, kCTIMER_SingleCallback);
 	usb_echo("Start measurements\r\n");
-	pressed = true;
-	GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, 0);
+	buttonPressEmulationCb(0);
 	CTIMER_StartTimer(TIMER);
 }
 
@@ -263,27 +264,18 @@ void onUsbEnumerationDone(void)
 
 void receivedReportCb(uint8_t *data, uint32_t dataLength)
 {
-	CTIMER_StopTimer(TIMER);
-	latency[idx] = TIMER->TC;
-	idx++;
+	if (pressed) {
+		latency[idx] = TIMER->TC;
+		idx++;
+		pressed = false;
+		GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, 1);
+	}
 
 	if (idx >= MEASURMENTS_COUNT) {
 		for (uint32_t i = 0; i < MEASURMENTS_COUNT; i++) {
 			usb_echo("%d\r\n", latency[i]);
 		}
 		__asm("BKPT #255");
-	}
-
-	CTIMER_Reset(TIMER);
-
-	if (pressed) {
-		pressed = false;
-		GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, 1);
-		CTIMER_StartTimer(TIMER);
-	} else {
-		pressed = true;
-		GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, 0);
-		CTIMER_StartTimer(TIMER);
 	}
 }
 
