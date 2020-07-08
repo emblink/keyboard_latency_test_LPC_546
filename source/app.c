@@ -214,19 +214,23 @@ static void USB_HostApplicationInit(void) {
 }
 
 #define TIMER CTIMER1
-#define MEASURMENTS_COUNT 10000
-#define MEASURMENTS_PERIOD_MS 65
+#define COUNT_PER_MEASUREMENT 10000
+#define MEASUREMENTS_COUNT 10
+#define MEASUREMENTS_PERIOD_MS 65
 #define DELAY_BEFORE_START_MS 1000
+#define USB_REPORT_MAX_SIZE 16
 #define GPIO_PORT 0
 #define GPIO_PIN 16
 
-volatile uint32_t latency[MEASURMENTS_COUNT] = { 0 };
+volatile uint32_t latency[COUNT_PER_MEASUREMENT] = { 0 };
 volatile uint32_t idx = 0;
-volatile bool pressed = false;
+volatile bool isButtonPressed = false;
+volatile bool processOutput = false;
 
-void buttonPressEmulationCb(uint32_t foo) {
+void buttonPressEmulationCb(uint32_t foo)
+{
 	(void) foo;
-	pressed = true;
+	isButtonPressed = true;
 	GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, 0);
 }
 
@@ -234,9 +238,8 @@ void startMeasurements(uint32_t foo)
 {
 	(void) foo;
 	CTIMER_StopTimer(TIMER);
-	CTIMER_Reset(TIMER);
 	const ctimer_match_config_t matchcofig = {
-		.matchValue = MEASURMENTS_PERIOD_MS * 1000,
+		.matchValue = MEASUREMENTS_PERIOD_MS * 1000,
 		.enableCounterReset = true,
 		.enableInterrupt = true
 	};
@@ -244,6 +247,7 @@ void startMeasurements(uint32_t foo)
 	static ctimer_callback_t cb_func = buttonPressEmulationCb;
 	CTIMER_RegisterCallBack(TIMER, &cb_func, kCTIMER_SingleCallback);
 	usb_echo("Start measurements\r\n");
+	CTIMER_Reset(TIMER);
 	buttonPressEmulationCb(0);
 	CTIMER_StartTimer(TIMER);
 }
@@ -264,19 +268,56 @@ void onUsbEnumerationDone(void)
 
 void receivedReportCb(uint8_t *data, uint32_t dataLength)
 {
-	if (pressed) {
+	if (isButtonPressed) {
 		latency[idx] = TIMER->TC;
 		idx++;
-		pressed = false;
-		GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, 1);
-	}
 
-	if (idx >= MEASURMENTS_COUNT) {
-		for (uint32_t i = 0; i < MEASURMENTS_COUNT; i++) {
-			usb_echo("%d\r\n", latency[i]);
+		// in case of corrupted report or release report
+		if (data[7] != 2 || dataLength != USB_REPORT_MAX_SIZE) { /* Esc button */
+			usb_echo("Unexpected Report\r\n");
+			for (uint32_t i = 0; i < dataLength; i++) {
+				usb_echo("[%d] = %d, ", i, data[i]);
+				if (i == 10)
+					usb_echo("\r\n");
+			}
+			usb_echo("length == %d\r\n", dataLength);
 		}
+
+		isButtonPressed = false;
+		GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, 1);
+
+		if (idx >= COUNT_PER_MEASUREMENT)
+			CTIMER_StopTimer(TIMER);
+	} else {
+		if (idx >= COUNT_PER_MEASUREMENT) {
+			processOutput = true;
+		}
+	}
+}
+
+static void processDataOutput(void)
+{
+	if (!processOutput)
+		return;
+
+	processOutput = false;
+
+	for (uint32_t i = 0; i < COUNT_PER_MEASUREMENT; i++) {
+		usb_echo("%d\r\n", latency[i]);
+	}
+	static uint32_t count = 0;
+	count++;
+	if (count >= MEASUREMENTS_COUNT) {
+		usb_echo("Measurement Finished\r\n", count);
 		__asm("BKPT #255");
 	}
+
+	usb_echo("Start next measurement %d\r\n", count);
+	idx = 0;
+
+	CTIMER_Reset(TIMER);
+	buttonPressEmulationCb(0);
+	CTIMER_StartTimer(TIMER);
 }
 
 int main(void) {
@@ -307,5 +348,6 @@ int main(void) {
 		USB_HostTaskFn(g_HostHandle);
 		USB_HostHidKeyboardTask(&g_HostHidKeyboard);
 		USB_HostHidMouseTask(&g_HostHidMouse);
+		processDataOutput();
 	}
 }
