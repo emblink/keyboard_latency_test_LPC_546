@@ -1,0 +1,17 @@
+core_cm4.h:1679:22:__NVIC_EnableIRQ	16	static
+core_cm4.h:1807:22:__NVIC_SetPriority	16	static
+fsl_common.h:460:28:EnableIRQ	16	static
+fsl_gpio.h:153:20:GPIO_PinWrite	24	static
+fsl_power.h:108:20:POWER_DisablePD	16	static
+fsl_ctimer.h:452:20:CTIMER_StartTimer	16	static
+fsl_ctimer.h:462:20:CTIMER_StopTimer	16	static
+fsl_ctimer.h:476:20:CTIMER_Reset	16	static
+app.c:84:6:USB1_IRQHandler	8	static
+app.c:89:6:USB_HostClockInit	16	static
+app.c:110:6:USB_HostIsrEnable	16	static
+app.c:130:6:USB_HostTaskFn	16	static
+app.c:143:21:USB_HostEvent	32	static
+app.c:197:13:USB_HostApplicationInit	16	static
+app.c:230:6:buttonPressEmulationCb	16	static
+app.c:244:6:receivedReportCb	16	static
+app.c:262:5:main	40	static

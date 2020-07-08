@@ -1,0 +1,6 @@
+host_keyboard.c:125:13:USB_HostKeyboardPrintKey	16	static
+host_keyboard.c:145:13:USB_HostKeyboardProcessBuffer	24	static
+host_keyboard.c:218:13:USB_HostHidInCallback	32	static
+host_keyboard.c:239:13:USB_HostHidControlCallback	32	static
+host_keyboard.c:265:6:USB_HostHidKeyboardTask	56	static
+host_keyboard.c:455:14:USB_HostHidKeyboardEvent	48	static

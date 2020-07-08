@@ -1,0 +1,5 @@
+host_mouse.c:67:13:USB_HostMouseProcessBuffer	16	static
+host_mouse.c:153:13:USB_HostHidControlCallback	32	static
+host_mouse.c:179:13:USB_HostHidInCallback	32	static
+host_mouse.c:199:6:USB_HostHidMouseTask	56	static
+host_mouse.c:373:14:USB_HostHidMouseEvent	48	static
