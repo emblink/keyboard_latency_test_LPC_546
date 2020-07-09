@@ -12,9 +12,10 @@ app.c:110:6:USB_HostIsrEnable	16	static
 app.c:130:6:USB_HostTaskFn	16	static
 app.c:143:21:USB_HostEvent	32	static
 app.c:197:13:USB_HostApplicationInit	16	static
-app.c:230:6:buttonPressEmulationCb	16	static
-app.c:237:6:startMeasurements	32	static
-app.c:255:6:onUsbEnumerationDone	24	static
-app.c:269:6:receivedReportCb	24	static
-app.c:298:13:processDataOutput	16	static
-app.c:323:5:main	24	static
+app.c:229:6:timeoutCb	16	static
+app.c:235:6:buttonPressEmulationCb	16	static
+app.c:242:6:startMeasurements	32	static
+app.c:259:6:onUsbEnumerationDone	24	static
+app.c:273:6:receivedReportCb	24	static
+app.c:314:13:processDataOutput	16	static
+app.c:338:5:main	24	static
