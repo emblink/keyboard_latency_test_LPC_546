@@ -214,8 +214,9 @@ static void USB_HostApplicationInit(void) {
 }
 
 #define TIMER CTIMER1
-#define COUNT_PER_MEASUREMENT 20
+#define COUNT_PER_MEASUREMENT 100
 #define MEASUREMENTS_COUNT 3
+#define MEASUREMENTS_PERIOD_MS 260
 #define DELAY_BEFORE_START_MS 1000
 #define USB_REPORT_MAX_SIZE 16
 #define GPIO_PORT 0
@@ -223,19 +224,18 @@ static void USB_HostApplicationInit(void) {
 
 volatile uint32_t latency[COUNT_PER_MEASUREMENT] = { 0 };
 volatile uint32_t idx = 0;
-volatile bool isButtonPressed = false;
+volatile bool pressedReportReceived = false;
+volatile bool releasedReportReceived = false;
 volatile bool processOutput = false;
-
-void timeoutCb(uint32_t foo)
-{
-	(void) foo;
-	__asm("BKPT #255");
-}
 
 void buttonPressEmulationCb(uint32_t foo)
 {
 	(void) foo;
-	isButtonPressed = true;
+	if (!pressedReportReceived || !releasedReportReceived) {
+		__asm("BKPT #255");
+	}
+	pressedReportReceived = false;
+	releasedReportReceived = false;
 	GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, 0);
 }
 
@@ -244,7 +244,7 @@ void startMeasurements(uint32_t foo)
 	(void) foo;
 	CTIMER_StopTimer(TIMER);
 	const ctimer_match_config_t matchcofig = {
-		.matchValue = 32000,
+		.matchValue = MEASUREMENTS_PERIOD_MS * 1000,
 		.enableCounterReset = true,
 		.enableInterrupt = true
 	};
@@ -253,6 +253,7 @@ void startMeasurements(uint32_t foo)
 	CTIMER_RegisterCallBack(TIMER, &cb_func, kCTIMER_SingleCallback);
 	usb_echo("Start measurements\r\n");
 	CTIMER_Reset(TIMER);
+	GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, 0);
 	CTIMER_StartTimer(TIMER);
 }
 
@@ -272,42 +273,33 @@ void onUsbEnumerationDone(void)
 
 void receivedReportCb(uint8_t *data, uint32_t dataLength)
 {
-	if (isButtonPressed) {
-		latency[idx] = TIMER->TC;
-		CTIMER_StopTimer(TIMER);
+	static const uint8_t pressedReport[USB_REPORT_MAX_SIZE] = {[0] = 1, [7] = 2};
+	static const uint8_t releasedReport[USB_REPORT_MAX_SIZE] = {[0] = 1};
+
+	uint32_t timestamp = TIMER->TC;
+
+	// verify received report
+	if (memcmp(data, pressedReport, USB_REPORT_MAX_SIZE) == 0) {
+		latency[idx] = timestamp;
 		idx++;
-
-		// in case of corrupted report or release report
-		if (data[7] != 2 || dataLength != USB_REPORT_MAX_SIZE) {
-			usb_echo("Unexpected Report\r\n");
-			for (uint32_t i = 0; i < dataLength; i++) {
-				usb_echo("[%d] = %d, ", i, data[i]);
-				if (i == 10)
-					usb_echo("\r\n");
-			}
-			usb_echo("length == %d\r\n", dataLength);
-		}
-
-		isButtonPressed = false;
+		pressedReportReceived = true;
 		GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, 1);
-	} else {
-		// in case of corrupted report
-		if (data[7] != 0 || dataLength != USB_REPORT_MAX_SIZE) {
-			usb_echo("Unexpected Report\r\n");
-			for (uint32_t i = 0; i < dataLength; i++) {
-				usb_echo("[%d] = %d, ", i, data[i]);
-				if (i == 10)
-					usb_echo("\r\n");
-			}
-			usb_echo("length == %d\r\n", dataLength);
-		}
-
+	} else if (memcmp(data, releasedReport, USB_REPORT_MAX_SIZE) == 0) {
+		releasedReportReceived = true;
 		if (idx >= COUNT_PER_MEASUREMENT) {
+			CTIMER_StopTimer(TIMER);
 			processOutput = true;
-		} else {
-			CTIMER_Reset(TIMER);
-			CTIMER_StartTimer(TIMER);
 		}
+	} else {
+		usb_echo("Unexpected Report pressed == %d released == %d\r\n",
+				  pressedReportReceived, releasedReportReceived);
+		for (uint32_t i = 0; i < dataLength; i++) {
+			usb_echo("[%d] = %d, ", i, data[i]);
+			if (i == 10)
+				usb_echo("\r\n");
+		}
+		usb_echo("length == %d\r\n", dataLength);
+		__asm("BKPT #255");
 	}
 }
 
