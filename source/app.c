@@ -214,7 +214,7 @@ static void USB_HostApplicationInit(void) {
 }
 
 #define TIMER CTIMER1
-#define COUNT_PER_MEASUREMENT 100
+#define COUNT_PER_MEASUREMENT 5000
 #define MEASUREMENTS_COUNT 3
 #define MEASUREMENTS_PERIOD_MS 260
 #define DELAY_BEFORE_START_MS 1000
@@ -343,6 +343,8 @@ int main(void) {
 		.outputLogic = 1,
 	};
 	GPIO_PinInit(GPIO, GPIO_PORT, GPIO_PIN, &pinConfig);
+	IOCON->PIO[0][16] = 0x300;
+	GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, 1);
 
 	ctimer_config_t config;
 	CTIMER_GetDefaultConfig(&config);

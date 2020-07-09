@@ -6,7 +6,7 @@
  * Generated linker script file for LPC54608J512
  * Created from linkscript.ldt by FMCreateLinkLibraries
  * Using Freemarker v2.3.23
- * MCUXpresso IDE v11.1.0 [Build 3209] [2019-12-12] on Jul 9, 2020 6:15:46 PM
+ * MCUXpresso IDE v11.1.0 [Build 3209] [2019-12-12] on Jul 9, 2020 6:53:44 PM
  */
 
 INCLUDE "lpcxpresso54608_host_hid_mouse_keyboard_bm_Debug_library.ld"
