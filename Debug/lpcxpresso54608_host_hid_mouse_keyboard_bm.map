@@ -2834,7 +2834,7 @@ END GROUP
                 0x00000154                __data_section_table_end = .
                 0x00000154                __bss_section_table = .
                 0x00000154        0x4 LONG 0x20000014 ADDR (.bss)
-                0x00000158        0x4 LONG 0xaa48 SIZEOF (.bss)
+                0x00000158        0x4 LONG 0x5c28 SIZEOF (.bss)
                 0x0000015c        0x4 LONG 0x4000000 ADDR (.bss_RAM2)
                 0x00000160        0x4 LONG 0x0 SIZEOF (.bss_RAM2)
                 0x00000164        0x4 LONG 0x40101a00 ADDR (.bss_RAM3)
@@ -4018,7 +4018,7 @@ END GROUP
                 [!provide]                PROVIDE (__end_bss_RAM4 = .)
                 [!provide]                PROVIDE (__end_bss_BOARD_SDRAM = .)
 
-.bss            0x20000014     0xaa48
+.bss            0x20000014     0x5c28
                 0x20000014                _bss = .
                 [!provide]                PROVIDE (__start_bss_RAM = .)
                 [!provide]                PROVIDE (__start_bss_SRAM_UPPER = .)
@@ -4043,54 +4043,54 @@ END GROUP
  .bss.g_HostHandle
                 0x20000b04        0x4 ./source/app.o
                 0x20000b04                g_HostHandle
- .bss.latency   0x20000b08     0x9c40 ./source/app.o
+ .bss.latency   0x20000b08     0x4e20 ./source/app.o
                 0x20000b08                latency
- .bss.idx       0x2000a748        0x4 ./source/app.o
-                0x2000a748                idx
+ .bss.idx       0x20005928        0x4 ./source/app.o
+                0x20005928                idx
  .bss.count.9185
-                0x2000a74c        0x4 ./source/app.o
+                0x2000592c        0x4 ./source/app.o
  .bss.s_ctimerCallback
-                0x2000a750       0x14 ./source/fsl_ctimer.o
+                0x20005930       0x14 ./source/fsl_ctimer.o
  .bss.ctimerCallbackType
-                0x2000a764        0x5 ./source/fsl_ctimer.o
- *fill*         0x2000a769        0x3 
+                0x20005944        0x5 ./source/fsl_ctimer.o
+ *fill*         0x20005949        0x3 
  .bss.s_KeyboardBuffer
-                0x2000a76c       0xc8 ./source/host_keyboard.o
+                0x2000594c       0xc8 ./source/host_keyboard.o
  .bss.g_HostHidKeyboard
-                0x2000a834       0x24 ./source/host_keyboard.o
-                0x2000a834                g_HostHidKeyboard
+                0x20005a14       0x24 ./source/host_keyboard.o
+                0x20005a14                g_HostHidKeyboard
  .bss.s_MouseBuffer
-                0x2000a858       0xc8 ./source/host_mouse.o
+                0x20005a38       0xc8 ./source/host_mouse.o
  .bss.g_HostHidMouse
-                0x2000a920       0x1c ./source/host_mouse.o
-                0x2000a920                g_HostHidMouse
+                0x20005b00       0x1c ./source/host_mouse.o
+                0x20005b00                g_HostHidMouse
  .bss.s_Usb_Pll_Freq
-                0x2000a93c        0x4 ./drivers/fsl_clock.o
+                0x20005b1c        0x4 ./drivers/fsl_clock.o
  .bss.s_flexcommIrqHandler
-                0x2000a940       0x28 ./drivers/fsl_flexcomm.o
+                0x20005b20       0x28 ./drivers/fsl_flexcomm.o
  .bss.s_flexcommHandle
-                0x2000a968       0x28 ./drivers/fsl_flexcomm.o
+                0x20005b48       0x28 ./drivers/fsl_flexcomm.o
  .bss.s_osaState
-                0x2000a990        0x8 ./component/osa/fsl_os_abstraction_bm.o
+                0x20005b70        0x8 ./component/osa/fsl_os_abstraction_bm.o
  .bss.__end_of_heap
-                0x2000a998        0x4 c:/nxp/mcuxpressoide_11.1.0_3209/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.1.0.201909161352/tools/bin/../lib/gcc/arm-none-eabi/8.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libcr_c.a(__init_alloc.o)
-                0x2000a998                __end_of_heap
- .bss.__heaps   0x2000a99c        0x4 c:/nxp/mcuxpressoide_11.1.0_3209/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.1.0.201909161352/tools/bin/../lib/gcc/arm-none-eabi/8.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libcr_c.a(__init_alloc.o)
-                0x2000a99c                __heaps
- .bss.errno     0x2000a9a0        0x4 c:/nxp/mcuxpressoide_11.1.0_3209/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.1.0.201909161352/tools/bin/../lib/gcc/arm-none-eabi/8.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libcr_c.a(errno.o)
-                0x2000a9a0                errno
- .bss.__Ciob    0x2000a9a4       0xb4 c:/nxp/mcuxpressoide_11.1.0_3209/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.1.0.201909161352/tools/bin/../lib/gcc/arm-none-eabi/8.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libcr_semihost_nf.a(__ciob.o)
-                0x2000a9a4                __Ciob
+                0x20005b78        0x4 c:/nxp/mcuxpressoide_11.1.0_3209/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.1.0.201909161352/tools/bin/../lib/gcc/arm-none-eabi/8.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libcr_c.a(__init_alloc.o)
+                0x20005b78                __end_of_heap
+ .bss.__heaps   0x20005b7c        0x4 c:/nxp/mcuxpressoide_11.1.0_3209/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.1.0.201909161352/tools/bin/../lib/gcc/arm-none-eabi/8.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libcr_c.a(__init_alloc.o)
+                0x20005b7c                __heaps
+ .bss.errno     0x20005b80        0x4 c:/nxp/mcuxpressoide_11.1.0_3209/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.1.0.201909161352/tools/bin/../lib/gcc/arm-none-eabi/8.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libcr_c.a(errno.o)
+                0x20005b80                errno
+ .bss.__Ciob    0x20005b84       0xb4 c:/nxp/mcuxpressoide_11.1.0_3209/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.1.0.201909161352/tools/bin/../lib/gcc/arm-none-eabi/8.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libcr_semihost_nf.a(__ciob.o)
+                0x20005b84                __Ciob
  .bss.isButtonPressed
-                0x2000aa58        0x1 ./source/app.o
-                0x2000aa58                isButtonPressed
+                0x20005c38        0x1 ./source/app.o
+                0x20005c38                isButtonPressed
  .bss.processOutput
-                0x2000aa59        0x1 ./source/app.o
-                0x2000aa59                processOutput
+                0x20005c39        0x1 ./source/app.o
+                0x20005c39                processOutput
  *(SORT_BY_ALIGNMENT(COMMON))
-                0x2000aa5c                . = ALIGN (0x4)
- *fill*         0x2000aa5a        0x2 
-                0x2000aa5c                _ebss = .
+                0x20005c3c                . = ALIGN (0x4)
+ *fill*         0x20005c3a        0x2 
+                0x20005c3c                _ebss = .
                 [!provide]                PROVIDE (__end_bss_RAM = .)
                 [!provide]                PROVIDE (__end_bss_SRAM_UPPER = .)
                 [!provide]                PROVIDE (end = .)
@@ -4128,29 +4128,29 @@ END GROUP
                 [!provide]                PROVIDE (__end_noinit_RAM4 = .)
                 [!provide]                PROVIDE (__end_noinit_BOARD_SDRAM = .)
 
-.noinit         0x2000aa5c        0x0
-                0x2000aa5c                _noinit = .
+.noinit         0x20005c3c        0x0
+                0x20005c3c                _noinit = .
                 [!provide]                PROVIDE (__start_noinit_RAM = .)
                 [!provide]                PROVIDE (__start_noinit_SRAM_UPPER = .)
  *(SORT_BY_ALIGNMENT(.noinit*))
-                0x2000aa5c                . = ALIGN (0x4)
-                0x2000aa5c                _end_noinit = .
+                0x20005c3c                . = ALIGN (0x4)
+                0x20005c3c                _end_noinit = .
                 [!provide]                PROVIDE (__end_noinit_RAM = .)
                 [!provide]                PROVIDE (__end_noinit_SRAM_UPPER = .)
                 0x00001000                _HeapSize = 0x1000
 
-.heap           0x2000aa5c     0x1000
-                0x2000aa5c                _pvHeapStart = .
-                0x2000ba5c                . = (. + _HeapSize)
- *fill*         0x2000aa5c     0x1000 
-                0x2000ba5c                . = ALIGN (0x4)
-                0x2000ba5c                _pvHeapLimit = .
+.heap           0x20005c3c     0x1000
+                0x20005c3c                _pvHeapStart = .
+                0x20006c3c                . = (. + _HeapSize)
+ *fill*         0x20005c3c     0x1000 
+                0x20006c3c                . = ALIGN (0x4)
+                0x20006c3c                _pvHeapLimit = .
                 0x00002000                _StackSize = 0x2000
 
 .heap2stackfill
-                0x2000ba5c     0x2000
-                0x2000da5c                . = (. + _StackSize)
- *fill*         0x2000ba5c     0x2000 
+                0x20006c3c     0x2000
+                0x20008c3c                . = (. + _StackSize)
+ *fill*         0x20006c3c     0x2000 
 
 .stack          0x20026000        0x0
                 0x20026000                _vStackBase = .
@@ -4403,7 +4403,7 @@ OUTPUT(lpcxpresso54608_host_hid_mouse_keyboard_bm.axf elf32-littlearm)
  .debug_line    0x0000f9b5      0x47f ./board/pin_mux.o
  .debug_line    0x0000fe34      0x41d C:\Users\embli\Documents\MCUXpressoIDE_11.1.0_3209\workspace\lpcxpresso54608_host_hid_mouse_keyboard_bm\libs\libpower_hardabi.a(fsl_power_lib.o)
 
-.debug_str      0x00000000    0x98bfb
+.debug_str      0x00000000    0x98bf9
  .debug_str     0x00000000    0x87785 ./utilities/fsl_assert.o
                               0x8788d (size before relaxing)
  .debug_str     0x00087785     0x450e ./usb/host/class/usb_host_hid.o
@@ -4422,37 +4422,37 @@ OUTPUT(lpcxpresso54608_host_hid_mouse_keyboard_bm.axf elf32-littlearm)
                               0x8ef55 (size before relaxing)
  .debug_str     0x00090f1a      0x724 ./startup/startup_lpc54608.o
                                0x3696 (size before relaxing)
- .debug_str     0x0009163e     0x2cc9 ./source/app.o
-                              0x8ed83 (size before relaxing)
- .debug_str     0x00094307      0xf19 ./source/fsl_ctimer.o
+ .debug_str     0x0009163e     0x2cc7 ./source/app.o
+                              0x8ed81 (size before relaxing)
+ .debug_str     0x00094305      0xf19 ./source/fsl_ctimer.o
                               0x896db (size before relaxing)
- .debug_str     0x00095220      0x3f0 ./source/host_keyboard.o
+ .debug_str     0x0009521e      0x3f0 ./source/host_keyboard.o
                               0x8c498 (size before relaxing)
- .debug_str     0x00095610       0x8b ./source/host_mouse.o
+ .debug_str     0x0009560e       0x8b ./source/host_mouse.o
                               0x8c3f7 (size before relaxing)
- .debug_str     0x0009569b       0x1f ./source/semihost_hardfault.o
+ .debug_str     0x00095699       0x1f ./source/semihost_hardfault.o
                                0x2f53 (size before relaxing)
- .debug_str     0x000956ba     0x164b ./drivers/fsl_clock.o
+ .debug_str     0x000956b8     0x164b ./drivers/fsl_clock.o
                               0x8ab4c (size before relaxing)
- .debug_str     0x00096d05      0x16c ./drivers/fsl_common.o
+ .debug_str     0x00096d03      0x16c ./drivers/fsl_common.o
                               0x87d4f (size before relaxing)
- .debug_str     0x00096e71      0x368 ./drivers/fsl_flexcomm.o
+ .debug_str     0x00096e6f      0x368 ./drivers/fsl_flexcomm.o
                               0x89262 (size before relaxing)
- .debug_str     0x000971d9       0x7b ./drivers/fsl_gpio.o
+ .debug_str     0x000971d7       0x7b ./drivers/fsl_gpio.o
                               0x88c18 (size before relaxing)
- .debug_str     0x00097254       0xae ./drivers/fsl_reset.o
+ .debug_str     0x00097252       0xae ./drivers/fsl_reset.o
                               0x87cc3 (size before relaxing)
- .debug_str     0x00097302       0xc3 ./device/system_LPC54608.o
+ .debug_str     0x00097300       0xc3 ./device/system_LPC54608.o
                               0x859ae (size before relaxing)
- .debug_str     0x000973c5      0x569 ./component/osa/fsl_os_abstraction_bm.o
+ .debug_str     0x000973c3      0x569 ./component/osa/fsl_os_abstraction_bm.o
                               0x88a44 (size before relaxing)
- .debug_str     0x0009792e      0x800 ./board/board.o
+ .debug_str     0x0009792c      0x800 ./board/board.o
                               0x89fdd (size before relaxing)
- .debug_str     0x0009812e       0x93 ./board/clock_config.o
+ .debug_str     0x0009812c       0x93 ./board/clock_config.o
                               0x887b3 (size before relaxing)
- .debug_str     0x000981c1      0x5c3 ./board/pin_mux.o
+ .debug_str     0x000981bf      0x5c3 ./board/pin_mux.o
                               0x88421 (size before relaxing)
- .debug_str     0x00098784      0x477 C:\Users\embli\Documents\MCUXpressoIDE_11.1.0_3209\workspace\lpcxpresso54608_host_hid_mouse_keyboard_bm\libs\libpower_hardabi.a(fsl_power_lib.o)
+ .debug_str     0x00098782      0x477 C:\Users\embli\Documents\MCUXpressoIDE_11.1.0_3209\workspace\lpcxpresso54608_host_hid_mouse_keyboard_bm\libs\libpower_hardabi.a(fsl_power_lib.o)
                                 0xc4a (size before relaxing)
 
 .comment        0x00000000       0xf4
