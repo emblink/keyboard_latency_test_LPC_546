@@ -29,6 +29,7 @@
 #include <stdbool.h>
 #include "fsl_power.h"
 #include "fsl_ctimer.h"
+#include "sdcard_fatfs.h"
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -341,6 +342,7 @@ static void processDataOutput(void)
 }
 
 int main(void) {
+	sdCardInit();
 	/* attach 12 MHz clock to FLEXCOMM0 (debug console) */
 	CLOCK_AttachClk(BOARD_DEBUG_UART_CLK_ATTACH);
 

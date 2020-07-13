@@ -15,9 +15,10 @@
 #include "fsl_sd_disk.h"
 #include "board.h"
 
-#include "pin_mux.h"
+#include "sdcard_pin_mux.h"
 #include <stdbool.h>
 #include "fsl_iocon.h"
+#include "sdcard_fatfs.h"
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -98,7 +99,7 @@ void Board_InitSdifUnusedDataPin(void)
 /*!
  * @brief Main function
  */
-int main(void)
+int sdCardInit(void)
 {
     FRESULT error;
     DIR directory; /* Directory object */
@@ -117,7 +118,7 @@ int main(void)
     /* attach main clock to SDIF */
     CLOCK_AttachClk(BOARD_SDIF_CLK_ATTACH);
 
-    BOARD_InitPins();
+    SD_BOARD_InitPins();
     /* This function is used to cover the IP bug which the DATA4-7 pin should be configured, otherwise the SDIF will not
      * work */
     Board_InitSdifUnusedDataPin();

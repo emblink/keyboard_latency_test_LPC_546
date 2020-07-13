@@ -30,7 +30,8 @@ source/app.o source/app.d: ../source/app.c ../source/usb_host_config.h \
  ../source/host_mouse.h ../source/app.h \
  C:\Users\embli\Documents\MCUXpressoIDE_11.1.0_3209\workspace\lpcxpresso54608_host_hid_mouse_keyboard_bm\board/pin_mux.h \
  C:\Users\embli\Documents\MCUXpressoIDE_11.1.0_3209\workspace\lpcxpresso54608_host_hid_mouse_keyboard_bm\drivers/fsl_power.h \
- C:\Users\embli\Documents\MCUXpressoIDE_11.1.0_3209\workspace\lpcxpresso54608_host_hid_mouse_keyboard_bm\drivers/fsl_ctimer.h
+ C:\Users\embli\Documents\MCUXpressoIDE_11.1.0_3209\workspace\lpcxpresso54608_host_hid_mouse_keyboard_bm\drivers/fsl_ctimer.h \
+ ../source/sdcard_fatfs.h
 
 ../source/usb_host_config.h:
 
@@ -101,3 +102,5 @@ C:\Users\embli\Documents\MCUXpressoIDE_11.1.0_3209\workspace\lpcxpresso54608_hos
 C:\Users\embli\Documents\MCUXpressoIDE_11.1.0_3209\workspace\lpcxpresso54608_host_hid_mouse_keyboard_bm\drivers/fsl_power.h:
 
 C:\Users\embli\Documents\MCUXpressoIDE_11.1.0_3209\workspace\lpcxpresso54608_host_hid_mouse_keyboard_bm\drivers/fsl_ctimer.h:
+
+../source/sdcard_fatfs.h:
