@@ -22,6 +22,12 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
+#define DIRECTORY "/latency"
+#define TEST_FILE "cardTest.txt"
+#define RESULTS_FILE "results.txt"
+
+#define TEST_FILE_PATH DIRECTORY "/" TEST_FILE
+#define RESULTS_FILE_PATH DIRECTORY "/" RESULTS_FILE
 
 /* buffer size (in byte) for read/write operations */
 #define BUFFER_SIZE (100U)
@@ -161,7 +167,7 @@ int sdCardInit(void)
 #endif /* FF_USE_MKFS */
 
     PRINTF("\r\nCreate directory......\r\n");
-    error = f_mkdir(_T("/dir_1"));
+    error = f_mkdir(_T(DIRECTORY));
     if (error)
     {
         if (error == FR_EXIST)
@@ -176,7 +182,7 @@ int sdCardInit(void)
     }
 
     PRINTF("\r\nCreate a file in that directory......\r\n");
-    error = f_open(&g_fileObject, _T("/dir_1/f_1.dat"), (FA_WRITE | FA_READ | FA_CREATE_ALWAYS));
+    error = f_open(&g_fileObject, _T(TEST_FILE_PATH), (FA_WRITE | FA_READ | FA_CREATE_ALWAYS));
     if (error)
     {
         if (error == FR_EXIST)
@@ -190,23 +196,8 @@ int sdCardInit(void)
         }
     }
 
-    PRINTF("\r\nCreate a directory in that directory......\r\n");
-    error = f_mkdir(_T("/dir_1/dir_2"));
-    if (error)
-    {
-        if (error == FR_EXIST)
-        {
-            PRINTF("Directory exists.\r\n");
-        }
-        else
-        {
-            PRINTF("Directory creation failed.\r\n");
-            return -1;
-        }
-    }
-
     PRINTF("\r\nList the file in that directory......\r\n");
-    if (f_opendir(&directory, "/dir_1"))
+    if (f_opendir(&directory, DIRECTORY))
     {
         PRINTF("Open directory failed.\r\n");
         return -1;
@@ -282,13 +273,8 @@ int sdCardInit(void)
             continue;
         }
         PRINTF("The read/write content is consistent.\r\n");
-
-        PRINTF("\r\nInput 'q' to quit read/write.\r\nInput other char to read/write file again.\r\n");
         break;
-//        ch = GETCHAR();
-//        PUTCHAR(ch);
     }
-//    PRINTF("\r\nThe example will not read/write file again.\r\n");
 
     if (f_close(&g_fileObject))
     {
@@ -296,10 +282,47 @@ int sdCardInit(void)
         return -1;
     }
 
-    return 0;
-//    while (true)
-//    {
-//    }
+    return f_unlink(TEST_FILE_PATH);
+}
+
+bool sdCardCreateResultsFile(void)
+{
+	FRESULT error = f_open(&g_fileObject, _T(RESULTS_FILE_PATH), (FA_WRITE | FA_READ | FA_CREATE_ALWAYS));
+    if (error)
+    {
+        if (error == FR_EXIST)
+        {
+            PRINTF("File exists.\r\n");
+        }
+        else
+        {
+            PRINTF("Open file failed.\r\n");
+        }
+        return false;
+    }
+    return true;
+}
+
+bool sdCardAppendResults(uint8_t *data, uint32_t size)
+{
+	UINT bytesWritten;
+	FRESULT error = f_write(&g_fileObject, data, size, &bytesWritten);
+    if ((error) || (bytesWritten != size))
+    {
+        PRINTF("Write results file failed. \r\n");
+        return false;
+    }
+    return true;
+}
+
+bool sdCardCloseFile(void)
+{
+    if (f_close(&g_fileObject))
+    {
+        PRINTF("\r\nClose file failed.\r\n");
+        return false;
+    }
+    return true;
 }
 
 static status_t sdcardWaitCardInsert(void)

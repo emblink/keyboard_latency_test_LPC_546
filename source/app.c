@@ -215,16 +215,18 @@ static void USB_HostApplicationInit(void) {
 }
 
 #define TIMER CTIMER1
-#define COUNT_PER_MEASUREMENT 3000
-#define MEASUREMENTS_COUNT 5
+#define COUNT_PER_MEASUREMENT 1500
+#define MEASUREMENTS_COUNT 15
 #define MEASUREMENTS_PERIOD_MS 65
 #define DELAY_BEFORE_START_MS 1000
 #define USB_REPORT_MAX_SIZE 16
 #define GPIO_PORT 0
 #define GPIO_PIN 16
 
-volatile uint32_t latency[COUNT_PER_MEASUREMENT] = { 0 };
+volatile char latency[COUNT_PER_MEASUREMENT * 8] = {'\0'};
+//volatile uint32_t latency[COUNT_PER_MEASUREMENT] = 0;
 volatile uint32_t idx = 0;
+volatile uint32_t measured = 0;
 volatile bool pressedReportReceived = false;
 volatile bool releasedReportReceived = false;
 volatile bool processOutput = false;
@@ -285,15 +287,28 @@ void receivedReportCb(uint8_t *data, uint32_t dataLength)
 	// verify received report
 	if (memcmp(data, pressedReport, USB_REPORT_MAX_SIZE) == 0 && buttonState == 1 &&
 		!releasedReportReceived && !pressedReportReceived) {
-		latency[idx] = timestamp;
-		idx++;
+		// convert time stamp to string
+		char number[15] = {'\0'};
+		int i = 0;
+		number[i++] = '\n';
+		while (timestamp != 0) {
+			number[i++] = timestamp % 10 + '0';
+			timestamp /= 10;
+		}
+
+		// write reversed string to result array
+		for (int j = i - 1; j >= 0; j--) {
+			latency[idx++] = number[j];
+		}
+
+		measured++;
 		pressedReportReceived = true;
 		buttonState = 0;
 		GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, 1);
 	} else if (memcmp(data, releasedReport, USB_REPORT_MAX_SIZE) == 0 && buttonState == 0 &&
 			   pressedReportReceived && !releasedReportReceived) {
 		releasedReportReceived = true;
-		if (idx >= COUNT_PER_MEASUREMENT) {
+		if (measured >= COUNT_PER_MEASUREMENT) {
 			CTIMER_StopTimer(TIMER);
 			processOutput = true;
 		}
@@ -324,31 +339,34 @@ static void processDataOutput(void)
 
 	processOutput = false;
 
-	for (uint32_t i = 0; i < COUNT_PER_MEASUREMENT; i++) {
-		usb_echo("%d\r\n", latency[i]);
-	}
+	if (!sdCardAppendResults((uint8_t *) latency, idx))
+		__asm("BKPT #255");
+
 	static uint32_t count = 0;
 	count++;
 	if (count >= MEASUREMENTS_COUNT) {
+		if (!sdCardCloseFile())
+			__asm("BKPT #255");
 		usb_echo("Measurement Finished\r\n", count);
 		__asm("BKPT #255");
 	}
 
-//	usb_echo("Start next measurement %d\r\n", count);
-	idx = 0;
+	memset((uint8_t *) latency, '\0', sizeof(latency));
+	measured = idx = 0;
 
 	CTIMER_Reset(TIMER);
 	CTIMER_StartTimer(TIMER);
 }
 
 int main(void) {
-	sdCardInit();
+	if (sdCardInit() != 0)
+		while(1);
+	if (!sdCardCreateResultsFile())
+		while(1);
 	/* attach 12 MHz clock to FLEXCOMM0 (debug console) */
 	CLOCK_AttachClk(BOARD_DEBUG_UART_CLK_ATTACH);
 
 	BOARD_InitPins();
-//	BOARD_BootClockFROHF96M();
-//	BOARD_InitDebugConsole();
 	POWER_DisablePD(kPDRUNCFG_PD_USB0_PHY); /*< Turn on USB Phy */
 	POWER_DisablePD(kPDRUNCFG_PD_USB1_PHY); /*< Turn on USB Phy */
 

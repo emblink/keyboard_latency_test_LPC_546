@@ -9,5 +9,8 @@
 #define SDCARD_FATFS_H_
 
 int sdCardInit(void);
+bool sdCardCreateResultsFile(void);
+bool sdCardAppendResults(uint8_t *data, uint32_t size);
+bool sdCardCloseFile(void);
 
 #endif /* SDCARD_FATFS_H_ */
