@@ -21,6 +21,11 @@ component/serial_manager \
 component/uart \
 device \
 drivers \
+fatfs/source \
+fatfs/source/fsl_ram_disk \
+fatfs/source/fsl_sd_disk \
+sdmmc/port \
+sdmmc/src \
 source \
 startup \
 usb/host/class \

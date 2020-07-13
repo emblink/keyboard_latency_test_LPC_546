@@ -22,7 +22,6 @@
 #include "ff.h"			/* Declarations of FatFs API */
 #include "diskio.h"		/* Declarations of device I/O functions */
 
-
 /*--------------------------------------------------------------------------
 
    Module Private Definitions
@@ -3733,7 +3732,6 @@ FRESULT f_open (
 /*-----------------------------------------------------------------------*/
 /* Read File                                                             */
 /*-----------------------------------------------------------------------*/
-asdasd
 FRESULT f_read (
 	FIL* fp, 	/* Pointer to the file object */
 	void* buff,	/* Pointer to data buffer */

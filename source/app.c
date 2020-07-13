@@ -347,8 +347,8 @@ int main(void) {
 	CLOCK_AttachClk(BOARD_DEBUG_UART_CLK_ATTACH);
 
 	BOARD_InitPins();
-	BOARD_BootClockFROHF96M();
-	BOARD_InitDebugConsole();
+//	BOARD_BootClockFROHF96M();
+//	BOARD_InitDebugConsole();
 	POWER_DisablePD(kPDRUNCFG_PD_USB0_PHY); /*< Turn on USB Phy */
 	POWER_DisablePD(kPDRUNCFG_PD_USB1_PHY); /*< Turn on USB Phy */
 

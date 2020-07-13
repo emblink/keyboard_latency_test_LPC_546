@@ -284,10 +284,11 @@ int sdCardInit(void)
         PRINTF("The read/write content is consistent.\r\n");
 
         PRINTF("\r\nInput 'q' to quit read/write.\r\nInput other char to read/write file again.\r\n");
-        ch = GETCHAR();
-        PUTCHAR(ch);
+        break;
+//        ch = GETCHAR();
+//        PUTCHAR(ch);
     }
-    PRINTF("\r\nThe example will not read/write file again.\r\n");
+//    PRINTF("\r\nThe example will not read/write file again.\r\n");
 
     if (f_close(&g_fileObject))
     {
@@ -295,9 +296,10 @@ int sdCardInit(void)
         return -1;
     }
 
-    while (true)
-    {
-    }
+    return 0;
+//    while (true)
+//    {
+//    }
 }
 
 static status_t sdcardWaitCardInsert(void)
