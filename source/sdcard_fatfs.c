@@ -117,23 +117,12 @@ int sdCardInit(void)
     char ch                            = '0';
     BYTE work[FF_MAX_SS];
 
-    CLOCK_EnableClock(kCLOCK_InputMux);
-    /* attach 12 MHz clock to FLEXCOMM0 (debug console) */
-    CLOCK_AttachClk(BOARD_DEBUG_UART_CLK_ATTACH);
-
-    /* attach main clock to SDIF */
-    CLOCK_AttachClk(BOARD_SDIF_CLK_ATTACH);
-
     SD_BOARD_InitPins();
     /* This function is used to cover the IP bug which the DATA4-7 pin should be configured, otherwise the SDIF will not
      * work */
     Board_InitSdifUnusedDataPin();
-    BOARD_BootClockPLL180M();
-    /* need call this function to clear the halt bit in clock divider register */
-    CLOCK_SetClkDiv(kCLOCK_DivSdioClk, (uint32_t)(SystemCoreClock / FSL_FEATURE_SDIF_MAX_SOURCE_CLOCK + 1U), true);
-    BOARD_InitDebugConsole();
-
-    PRINTF("\r\nFATFS example to demonstrate how to use FATFS with SD card.\r\n");
+    /* attach main clock to SDIF */
+    CLOCK_AttachClk(BOARD_SDIF_CLK_ATTACH);
 
     PRINTF("\r\nPlease insert a card into board.\r\n");
 
@@ -166,7 +155,7 @@ int sdCardInit(void)
     }
 #endif /* FF_USE_MKFS */
 
-    PRINTF("\r\nCreate directory......\r\n");
+//    PRINTF("\r\nCreate directory......\r\n");
     error = f_mkdir(_T(DIRECTORY));
     if (error)
     {
@@ -181,7 +170,7 @@ int sdCardInit(void)
         }
     }
 
-    PRINTF("\r\nCreate a file in that directory......\r\n");
+//    PRINTF("\r\nCreate a file in that directory......\r\n");
     error = f_open(&g_fileObject, _T(TEST_FILE_PATH), (FA_WRITE | FA_READ | FA_CREATE_ALWAYS));
     if (error)
     {
@@ -196,7 +185,7 @@ int sdCardInit(void)
         }
     }
 
-    PRINTF("\r\nList the file in that directory......\r\n");
+//    PRINTF("\r\nList the file in that directory......\r\n");
     if (f_opendir(&directory, DIRECTORY))
     {
         PRINTF("Open directory failed.\r\n");
@@ -218,11 +207,11 @@ int sdCardInit(void)
         }
         if (fileInformation.fattrib & AM_DIR)
         {
-            PRINTF("Directory file : %s.\r\n", fileInformation.fname);
+//            PRINTF("Directory file : %s.\r\n", fileInformation.fname);
         }
         else
         {
-            PRINTF("General file : %s.\r\n", fileInformation.fname);
+//            PRINTF("General file : %s.\r\n", fileInformation.fname);
         }
     }
 
@@ -230,7 +219,7 @@ int sdCardInit(void)
     g_bufferWrite[BUFFER_SIZE - 2U] = '\r';
     g_bufferWrite[BUFFER_SIZE - 1U] = '\n';
 
-    PRINTF("\r\nWrite/read file until encounters error......\r\n");
+//    PRINTF("\r\nWrite/read file until encounters error......\r\n");
     while (true)
     {
         if (failedFlag || (ch == 'q'))
@@ -238,7 +227,7 @@ int sdCardInit(void)
             break;
         }
 
-        PRINTF("\r\nWrite to above created file.\r\n");
+//        PRINTF("\r\nWrite to above created file.\r\n");
         error = f_write(&g_fileObject, g_bufferWrite, sizeof(g_bufferWrite), &bytesWritten);
         if ((error) || (bytesWritten != sizeof(g_bufferWrite)))
         {
@@ -255,7 +244,7 @@ int sdCardInit(void)
             continue;
         }
 
-        PRINTF("Read from above created file.\r\n");
+//        PRINTF("Read from above created file.\r\n");
         memset(g_bufferRead, 0U, sizeof(g_bufferRead));
         error = f_read(&g_fileObject, g_bufferRead, sizeof(g_bufferRead), &bytesRead);
         if ((error) || (bytesRead != sizeof(g_bufferRead)))
@@ -265,14 +254,15 @@ int sdCardInit(void)
             continue;
         }
 
-        PRINTF("Compare the read/write content......\r\n");
+//        PRINTF("Compare the read/write content......\r\n");
         if (memcmp(g_bufferWrite, g_bufferRead, sizeof(g_bufferWrite)))
         {
             PRINTF("Compare read/write content isn't consistent.\r\n");
             failedFlag = true;
             continue;
         }
-        PRINTF("The read/write content is consistent.\r\n");
+//        PRINTF("The read/write content is consistent.\r\n\r\n");
+        PRINTF("SD card initialized successfully\r\n\r\n");
         break;
     }
 

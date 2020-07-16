@@ -452,7 +452,7 @@ void USB_HostHidKeyboardTask(void *param)
     }
 }
 
-extern void onUsbEnumerationDone(void);
+extern void onUsbEnumerationDone(bool configured);
 
 usb_status_t USB_HostHidKeyboardEvent(usb_device_handle deviceHandle,
                                       usb_host_configuration_handle configurationHandle,
@@ -527,7 +527,7 @@ usb_status_t USB_HostHidKeyboardEvent(usb_device_handle deviceHandle,
                         usb_echo("vid=0x%x ", infoValue);
                         USB_HostHelperGetPeripheralInformation(deviceHandle, kUSB_HostGetDeviceAddress, &infoValue);
                         usb_echo("address=%d\r\n", infoValue);
-                        onUsbEnumerationDone();
+                        onUsbEnumerationDone(true);
                     }
                     else
                     {
@@ -547,6 +547,7 @@ usb_status_t USB_HostHidKeyboardEvent(usb_device_handle deviceHandle,
                 {
                     g_HostHidKeyboard.deviceState = kStatus_DEV_Detached;
                 }
+                onUsbEnumerationDone(false);
             }
             break;
 
