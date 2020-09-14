@@ -29,6 +29,8 @@
 #include <stdbool.h>
 #include "fsl_power.h"
 #include "fsl_ctimer.h"
+#include "sdcard_fatfs.h"
+#include "fsl_debug_console.h"
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -210,90 +212,264 @@ static void USB_HostApplicationInit(void) {
 	}
 	USB_HostIsrEnable();
 
-	usb_echo("host init done\r\n");
+	usb_echo("Usb host init done, plug in keyboard\r\n");
 }
 
+/************************************** TEST CODE **************************************/
+typedef enum {
+	ButtonStatePressed = 0,
+	ButtonStateReleased = 1,
+} ButtonState;
+
 #define TIMER CTIMER1
-#define MEASURMENTS_COUNT 10000
+#define COUNT_PER_MEASUREMENT 1000
 #define DELAY_BEFORE_START_MS 1000
 #define GPIO_PORT 0
 #define GPIO_PIN 16
 
-volatile uint32_t latency[MEASURMENTS_COUNT] = { 0 };
-volatile uint32_t idx = 0;
-volatile bool pressed = false;
+static volatile char latency[COUNT_PER_MEASUREMENT * 8] = {'\0'};
+static volatile uint32_t idx = 0;
+static volatile uint32_t measured = 0;
+static volatile bool pressedReportReceived = false;
+static volatile bool releasedReportReceived = false;
+static volatile bool processOutput = false;
+static volatile ButtonState buttonState = ButtonStateReleased;
+static uint32_t maxLatency = 0;
+static uint8_t pressedReport[100] = {0};
+static uint8_t releasedReport[100] = {0};
+static bool keyReportTest = false;
+static uint32_t usbReportLength = 0;
+static bool unexpectedReport = false;
 
-//void buttonPressEmulationCb(uint32_t foo) {
-//	(void) foo;
-//	GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, 0);
-//}
+/* User input values */
+static uint32_t measurementsQuantity = 0;
+static uint32_t measurementsPeriodMs = 0;
+
+static void setButtonState(ButtonState state)
+{
+	buttonState = state;
+	GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, state);
+}
+
+void buttonPressEmulationCb(uint32_t foo)
+{
+	(void) foo;
+	if (!pressedReportReceived || !releasedReportReceived || buttonState != ButtonStateReleased) {
+		usb_echo("buttonPressEmulationCb failed\r\n");
+		usb_echo("pressedReportReceived %d, releasedReportReceived %d, button %s\r\n",
+				  pressedReportReceived, releasedReportReceived,
+				  buttonState == ButtonStatePressed ? "pressed" :"released");
+		__asm("BKPT #255");
+	}
+	pressedReportReceived = false;
+	releasedReportReceived = false;
+	setButtonState(ButtonStatePressed);
+}
 
 void startMeasurements(uint32_t foo)
 {
 	(void) foo;
-	CTIMER_StopTimer(TIMER);
-	CTIMER_Reset(TIMER);
-	const ctimer_match_config_t matchcofig = {
-		.matchValue = 0xFFFFFFFF,
-		.enableCounterReset = true,
-		.enableInterrupt = false
-	};
-	CTIMER_SetupMatch(TIMER, kCTIMER_Match_0, &matchcofig);
-//	static ctimer_callback_t cb_func = buttonPressEmulationCb;
-//	CTIMER_RegisterCallBack(TIMER, &cb_func, kCTIMER_SingleCallback);
-	usb_echo("Start measurements\r\n");
-	pressed = true;
-	GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, 0);
-	CTIMER_StartTimer(TIMER);
-}
+	pressedReportReceived = false;
+	releasedReportReceived = false;
 
-void onUsbEnumerationDone(void)
-{
 	const ctimer_match_config_t matchcofig = {
-		.matchValue = DELAY_BEFORE_START_MS * 1000,
+		.matchValue = measurementsPeriodMs * 1000,
 		.enableCounterReset = true,
 		.enableInterrupt = true
 	};
 	CTIMER_SetupMatch(TIMER, kCTIMER_Match_0, &matchcofig);
-	static ctimer_callback_t cb_func = startMeasurements;
+	static ctimer_callback_t cb_func = buttonPressEmulationCb;
 	CTIMER_RegisterCallBack(TIMER, &cb_func, kCTIMER_SingleCallback);
-	usb_echo("Enumeration done\r\n");
+	CTIMER_Reset(TIMER);
+
+	setButtonState(ButtonStatePressed);
 	CTIMER_StartTimer(TIMER);
+}
+
+void onUsbEnumerationDone(bool configured)
+{
+	if (configured) {
+		keyReportTest = true;
+	} else {
+		CTIMER_StopTimer(TIMER);
+		usb_echo("Keyboard Detached, test stoped");
+		__asm("BKPT #255");
+	}
 }
 
 void receivedReportCb(uint8_t *data, uint32_t dataLength)
 {
-	CTIMER_StopTimer(TIMER);
-	latency[idx] = TIMER->TC;
-	idx++;
+	uint32_t timestamp = TIMER->TC;
 
-	if (idx >= MEASURMENTS_COUNT) {
-		for (uint32_t i = 0; i < MEASURMENTS_COUNT; i++) {
-			usb_echo("%d\r\n", latency[i]);
+	if (keyReportTest) {
+		if (!pressedReportReceived) {
+			usbReportLength = dataLength;
+			memcpy(pressedReport, data, dataLength);
+			pressedReportReceived = true;
+		} else if (!releasedReportReceived) {
+			memcpy(releasedReport, data, dataLength);
+			releasedReportReceived = true;
 		}
+		return;
+	}
+
+	// verify received report
+	if (memcmp(data, pressedReport, usbReportLength) == 0 && buttonState == ButtonStatePressed &&
+		!releasedReportReceived && !pressedReportReceived) {
+		if (timestamp > maxLatency)
+			maxLatency = timestamp;
+		// convert time stamp to string
+		char number[15] = {'\0'};
+		int i = 0;
+		number[i++] = '\n';
+		while (timestamp != 0) {
+			number[i++] = timestamp % 10 + '0';
+			timestamp /= 10;
+		}
+
+		// write reversed string to result array
+		for (int j = i - 1; j >= 0; j--) {
+			latency[idx++] = number[j];
+		}
+
+		measured++;
+		pressedReportReceived = true;
+		setButtonState(ButtonStateReleased);
+	} else if (memcmp(data, releasedReport, usbReportLength) == 0 && buttonState == ButtonStateReleased &&
+			   pressedReportReceived && !releasedReportReceived) {
+		releasedReportReceived = true;
+		if (measured >= COUNT_PER_MEASUREMENT) {
+			CTIMER_StopTimer(TIMER);
+			processOutput = true;
+		}
+	} else {
+		CTIMER_StopTimer(TIMER);
+		memcpy(releasedReport, data, dataLength);
+		unexpectedReport = true;
+	}
+}
+
+static void processDataOutput(void)
+{
+	if (unexpectedReport) {
+		unexpectedReport = false;
+		usb_echo("\r\nReceived unexpected report!\r\n");
+		usb_echo("pressedReportReceived %d, releasedReportReceived %d, button %s\r\n",
+				  pressedReportReceived, releasedReportReceived,
+				  buttonState == ButtonStatePressed ? "pressed" :"released");
+		for (uint32_t i = 0; i < usbReportLength; i++) {
+			usb_echo("[%d] = %d, ", i, releasedReport[i]);
+			if (i == 10)
+				usb_echo("\r\n");
+		}
+		usb_echo("\r\nTest failed\r\n");
 		__asm("BKPT #255");
 	}
 
-	CTIMER_Reset(TIMER);
+	if (!processOutput)
+		return;
 
-	if (pressed) {
-		pressed = false;
-		GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, 1);
-		CTIMER_StartTimer(TIMER);
+	processOutput = false;
+
+	if (!sdCardAppendResults((uint8_t *) latency, idx)) {
+		usb_echo("sdCardAppendResults failed");
+		__asm("BKPT #255");
+	}
+
+	static uint32_t count = 0;
+	count++;
+	if (count >= measurementsQuantity) {
+		usb_echo("\r\n************  Measurement Finished  ************\r\n", count);
+		if (!sdCardCloseFile()) {
+			usb_echo("sdCardCloseFile failed");
+			__asm("BKPT #255");
+		}
+		usb_echo("max latency %u us", maxLatency);
+		__asm("BKPT #255");
+	}
+
+	memset((uint8_t *) latency, '\0', sizeof(latency));
+	measured = idx = 0;
+
+	CTIMER_Reset(TIMER);
+	CTIMER_StartTimer(TIMER);
+}
+
+static void processKeyReportTest(void)
+{
+	if (!keyReportTest)
+		return;
+
+	static bool waitPress = true;
+	static bool waitRelease = true;
+
+	if (!pressedReportReceived) {
+		if (waitPress) {
+			waitPress = false;
+			usb_echo("\r\nPress and hold the key that will be triggered by optocoupler\r\n ");
+		}
+	} else if (!releasedReportReceived) {
+		if (waitRelease) {
+			waitRelease = false;
+			usb_echo("Pressed report received, release key\r\n ");
+		}
 	} else {
-		pressed = true;
-		GPIO_PinWrite(GPIO, GPIO_PORT, GPIO_PIN, 0);
+		keyReportTest = false;
+	    uint32_t testTimeMs = (measurementsQuantity  * 1000 * measurementsPeriodMs);
+	    uint32_t hours = testTimeMs / 3600000;
+	    uint32_t minutes = (testTimeMs % 3600000) / (60 * 1000);
+	    usb_echo("\r\nTest will approximately take %u hours %u minutes\r\n ", hours, minutes);
+		usb_echo("\r\nStart measurements\r\n");
+		// 1 sec delay to ensure debounce will no affect measurements
+		const ctimer_match_config_t matchcofig = {
+			.matchValue = 1000 * 1000,
+			.enableCounterStop = true,
+			.enableInterrupt = true
+		};
+		CTIMER_SetupMatch(TIMER, kCTIMER_Match_0, &matchcofig);
+		static ctimer_callback_t cb_func = startMeasurements;
+		CTIMER_RegisterCallBack(TIMER, &cb_func, kCTIMER_SingleCallback);
+		CTIMER_Reset(TIMER);
 		CTIMER_StartTimer(TIMER);
 	}
 }
 
 int main(void) {
-	/* attach 12 MHz clock to FLEXCOMM0 (debug console) */
-	CLOCK_AttachClk(BOARD_DEBUG_UART_CLK_ATTACH);
+    CLOCK_EnableClock(kCLOCK_InputMux);
+    /* attach 12 MHz clock to FLEXCOMM0 (debug console) */
+    CLOCK_AttachClk(BOARD_DEBUG_UART_CLK_ATTACH);
+    BOARD_InitPins();
+    BOARD_BootClockPLL180M();
+    /* need call this function to clear the halt bit in clock divider register */
+    CLOCK_SetClkDiv(kCLOCK_DivSdioClk, (uint32_t)(SystemCoreClock / FSL_FEATURE_SDIF_MAX_SOURCE_CLOCK + 1U), true);
+    BOARD_InitDebugConsole();
 
-	BOARD_InitPins();
-	BOARD_BootClockFROHF96M();
-	BOARD_InitDebugConsole();
+    usb_echo("\r\nKeyboard latency test\r\n");
+    do {
+    	usb_echo("\r\nInput test quantity in thousands, 1 - 500\r\n");
+    	if (SCANF("%u", &measurementsQuantity) != 1 || measurementsQuantity < 1 || measurementsQuantity > 500) {
+    		usb_echo("Wrong input\r\n");
+    		measurementsQuantity = 0;
+    	} else {
+    		usb_echo("test quantity == %u\r\n", measurementsQuantity);
+    	}
+    } while (measurementsQuantity == 0);
+
+	do {
+		usb_echo("\r\nInput button click period 65ms - 1000ms\r\n");
+		if (SCANF("%u", &measurementsPeriodMs) != 1 || measurementsPeriodMs < 65 || measurementsPeriodMs > 1000) {
+			usb_echo("Wrong input\r\n");
+			measurementsPeriodMs = 0;
+		} else {
+			usb_echo("click period == %u\r\n", measurementsPeriodMs);
+		}
+	} while (measurementsPeriodMs == 0);
+
+	if (sdCardInit() != 0)
+		while(1);
+	if (!sdCardCreateResultsFile())
+		while(1);
+
 	POWER_DisablePD(kPDRUNCFG_PD_USB0_PHY); /*< Turn on USB Phy */
 	POWER_DisablePD(kPDRUNCFG_PD_USB1_PHY); /*< Turn on USB Phy */
 
@@ -303,17 +479,29 @@ int main(void) {
 		.outputLogic = 1,
 	};
 	GPIO_PinInit(GPIO, GPIO_PORT, GPIO_PIN, &pinConfig);
+	IOCON->PIO[GPIO_PORT][GPIO_PIN] = 0x300;
+	setButtonState(ButtonStateReleased);
 
 	ctimer_config_t config;
 	CTIMER_GetDefaultConfig(&config);
 	config.prescale = SystemCoreClock / 1000000 - 1;
 	CTIMER_Init(TIMER, &config);
+	const ctimer_match_config_t matchcofig = {
+		.matchValue = measurementsPeriodMs * 1000,
+		.enableCounterReset = true,
+		.enableInterrupt = true
+	};
+	CTIMER_SetupMatch(TIMER, kCTIMER_Match_0, &matchcofig);
+	static ctimer_callback_t cb_func = buttonPressEmulationCb;
+	CTIMER_RegisterCallBack(TIMER, &cb_func, kCTIMER_SingleCallback);
 
 	USB_HostApplicationInit();
 
 	while (1) {
 		USB_HostTaskFn(g_HostHandle);
 		USB_HostHidKeyboardTask(&g_HostHidKeyboard);
-		USB_HostHidMouseTask(&g_HostHidMouse);
+//		USB_HostHidMouseTask(&g_HostHidMouse);
+		processDataOutput();
+		processKeyReportTest();
 	}
 }

@@ -13,6 +13,11 @@ RM := rm -rf
 -include usb/host/subdir.mk
 -include startup/subdir.mk
 -include source/subdir.mk
+-include sdmmc/src/subdir.mk
+-include sdmmc/port/subdir.mk
+-include fatfs/source/fsl_sd_disk/subdir.mk
+-include fatfs/source/fsl_ram_disk/subdir.mk
+-include fatfs/source/subdir.mk
 -include drivers/subdir.mk
 -include device/subdir.mk
 -include component/uart/subdir.mk
